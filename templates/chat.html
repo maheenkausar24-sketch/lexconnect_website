@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Consultation Chat</title>
+
+<style>
+
+body{
+font-family: Arial;
+background: linear-gradient(135deg,#5f7cff,#9c6bff);
+height:100vh;
+margin:0;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.chat-container{
+width:600px;
+height:650px;
+background:white;
+border-radius:15px;
+display:flex;
+flex-direction:column;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+overflow:hidden;
+}
+
+.chat-header{
+background:#4a57d6;
+color:white;
+padding:18px;
+font-size:20px;
+font-weight:bold;
+}
+
+.chat-messages{
+flex:1;
+padding:20px;
+overflow-y:auto;
+background:#f5f6fa;
+}
+
+.message{
+margin-bottom:15px;
+display:flex;
+}
+
+.user{
+justify-content:flex-end;
+}
+
+.lawyer{
+justify-content:flex-start;
+}
+
+.bubble{
+padding:12px 16px;
+border-radius:18px;
+max-width:70%;
+font-size:14px;
+line-height:1.4;
+}
+
+.user .bubble{
+background:#4a57d6;
+color:white;
+border-bottom-right-radius:5px;
+}
+
+.lawyer .bubble{
+background:#e4e6eb;
+color:black;
+border-bottom-left-radius:5px;
+}
+
+.chat-input{
+display:flex;
+padding:15px;
+border-top:1px solid #ddd;
+}
+
+.chat-input input{
+flex:1;
+padding:12px;
+border-radius:20px;
+border:1px solid #ccc;
+outline:none;
+font-size:14px;
+}
+
+.chat-input button{
+margin-left:10px;
+padding:10px 18px;
+background:#4a57d6;
+color:white;
+border:none;
+border-radius:20px;
+cursor:pointer;
+}
+
+.chat-input button:hover{
+background:#3844b0;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="chat-container">
+
+<div class="chat-header">
+Chat with {{ consultation.lawyer.name }}
+</div>
+
+<div class="chat-messages">
+
+{% for m in messages %}
+
+<div class="message {% if m.sender == 'user' %}user{% else %}lawyer{% endif %}">
+<div class="bubble">
+{{ m.message }}
+</div>
+</div>
+
+{% endfor %}
+
+</div>
+
+<form method="POST" class="chat-input">
+
+{% csrf_token %}
+
+<input
+type="text"
+name="message"
+placeholder="Type your message..."
+required
+>
+
+<button type="submit">
+Send
+</button>
+
+</form>
+
+</div>
+
+</body>
+</html>
