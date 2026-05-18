@@ -1,136 +1,164 @@
-<!DOCTYPE html>
+<style>
 
-<html>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #5b6df0, #8e66f5);
+    margin: 0;
+    padding: 30px;
+}
 
-<head>
-    <title>{{ category.name }} Lawyers</title>
-
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f6fb;
-            margin: 0;
-        }
-
-        .header {
-            background: linear-gradient(90deg, #4a6cf7, #6a8bff);
-            color: white;
-            padding: 25px;
-            text-align: center;
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        .container {
-            width: 80%;
-            margin: auto;
-            margin-top: 40px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            transition: 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .info {
-            color: #555;
-            margin-bottom: 8px;
-        }
-
-        button {
-            background: #4a6cf7;
-            border: none;
-            padding: 10px 18px;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #324ed1;
-        }
-
-        .back {
-            text-align: center;
-            margin-top: 40px;
-        }
-
-        .back a {
-            text-decoration: none;
-            background: #333;
-            color: white;
-            padding: 10px 18px;
-            border-radius: 6px;
-        }
-    </style>
-
-</head>
-
-<body>
-
-    <div class="header">
-        {{ category.name }} Lawyers
-    </div>
-
-    <div class="container">
-
-        {% for lawyer in lawyers %}
-
-        <div class="card">
-
-            <h3>{{ lawyer.name }}</h3>
-
-            <p class="info"><b>Experience:</b> {{ lawyer.experience }} years</p>
-
-            <p class="info"><b>Email:</b> {{ lawyer.email }}</p>
-
-            <p class="info"><b>Phone:</b> {{ lawyer.phone }}</p>
-              <strong>Address:</strong> 📍 {{ lawyer.location }}
-
-              
-            <a href="/lawyer/profile/{{lawyer.id}}/" style="text-decoration:none;">
-                <button>View Profile</button>
-            </a>
+/* GRID */
+.lawyer-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
 
 
-           <div class="lawyer-card">
+/* CARD */
+.lawyer-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transition: 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
 
+/* HOVER EFFECT */
+.lawyer-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
 
+/* HEADER */
+.lawyer-name {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* BADGES */
+.badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.verified {
+    background: #d4edda;
+    color: #155724;
+}
+
+.not-verified {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* STATUS DOT */
+.status {
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.online { color: green; }
+.offline { color: gray; }
+
+/* BUTTONS */
+.btn {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px;
+    transition: 0.3s;
+}
+
+.chat-btn {
+    background: #5b6df0;
+    color: white;
+}
+
+.book-btn {
+    background: #28a745;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+/* STAR */
+.star {
+    color: gold;
+}
+
+</style>
+
+<form method="GET" style="margin-bottom: 25px; text-align:center;">
+
+    <input type="text" name="location" placeholder="🔍 Search by location..."
+           value="{{ request.GET.location }}"
+           style="padding:12px; width:250px; border-radius:20px; border:none; outline:none;">
+
+    <button type="submit"
+            style="padding:12px 20px; border:none; border-radius:20px;
+                   background:#5b6df0; color:white;">
+        Search
+    </button>
+
+</form>
+
+<div class="lawyer-container">
+
+{% for lawyer in lawyers %}
+
+<div class="lawyer-card">
+
+    <div class="lawyer-name">{{ lawyer.name }}</div>
+
+    <p><b>{{ lawyer.specialization }}</b></p>
+
+    <p>📍 {{ lawyer.location }}</p>
+    <p>💼 {{ lawyer.experience }} years experience</p>
+    <p>💰 ₹{{ lawyer.consultation_fee }}</p>
+
+    <p class="star">⭐ {{ lawyer.rating }} ({{ lawyer.total_reviews }} reviews)</p>
+
+    {% if lawyer.is_verified %}
+        <span class="badge verified">✔ Verified</span>
+    {% else %}
+        <span class="badge not-verified">Not Verified</span>
+    {% endif %}
+
+    <div class="status">
         {% if lawyer.is_online %}
-           <span style="color:green;">🟢 Active Now</span>
-
-
-          {% else %}
-            <span style="color:gray;">⚪ Offline</span>
-           <button disabled>Unavailable</button>
-
-          {% endif %}
-
-         </div>
-
- </div>
-
-        {% endfor %}
-    <div class="back">
-        <a href="/dashboard/">⬅ Back to Dashboard</a>
+            🟢 <span class="online">Online</span>
+        {% else %}
+            ⚪ <span class="offline">Offline</span>
+        {% endif %}
     </div>
 
-</body>
+    <a href="{% url 'start_chat' lawyer.id %}">
+        <button class="btn chat-btn">💬 Chat</button>
+    </a>
 
-</html>
+    <a href="{% url 'consult_lawyer' lawyer.id %}">
+        <button class="btn book-btn">📅 Book</button>
+    </a>
+
+</div>
+
+{% endfor %}
+
+{% if lawyers|length == 0 %}
+    <h3 style="text-align:center; color:white;">
+        ❌ No lawyers found in this location
+    </h3>
+{% endif %}
+
+</div>

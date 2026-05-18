@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Lawyer, Consultation, LawCategory, Message
+from .models import Lawyer, LawCategory, Message, Consultation, Review
 from google import genai
 import os
 from dotenv import load_dotenv
@@ -97,12 +97,14 @@ def dashboard(request):
 # ---------------- LAWYERS ----------------
 
 def lawyers_by_category(request, category_id):
-    category = LawCategory.objects.get(id=category_id)
+    lawyers = Lawyer.objects.filter(category_id=category_id)
 
-    lawyers = Lawyer.objects.filter(category=category)
+    location = request.GET.get("location")
+
+    if location:
+        lawyers = lawyers.filter(location__icontains=location)
 
     return render(request, "lawyers.html", {
-        "category": category,
         "lawyers": lawyers
     })
 
@@ -151,65 +153,130 @@ def logout_user(request):
 
 
 # ---------------- FALLBACK LEGAL AI ----------------
-
 def fallback_legal_response(question):
 
     q = question.lower()
 
-    if "divorce" in q or "marriage" in q:
-        return """Here are some steps you can take:
+    # 🔴 Criminal Law
+    if any(word in q for word in ["crime", "fraud", "theft", "assault", "police"]):
+        return """⚖️ Criminal Law Guidance:
 
-1. File a divorce petition in family court.
-2. Gather marriage documents and evidence.
-3. Attempt mediation if required.
-4. Consult a Family Lawyer."""
+1. Report the incident to the nearest police station.
+2. File an FIR and keep a copy.
+3. Collect all evidence (messages, documents, witnesses).
+4. Avoid making statements without legal advice.
 
-    elif "property" in q or "land" in q:
-        return """Steps you can take:
+👉 Consult a Criminal Lawyer immediately."""
 
-1. Gather ownership documents.
-2. Send a legal notice to the person occupying the property.
-3. File a civil suit for possession if necessary.
-4. Consult a Property Lawyer."""
+    # 🟢 Family Law
+    elif any(word in q for word in ["divorce", "marriage", "custody", "alimony"]):
+        return """👨‍👩‍👧 Family Law Guidance:
 
-    elif "cyber" in q or "hack" in q or "online fraud" in q:
-        return """Steps you should take:
+1. File a petition in family court.
+2. Gather marriage and identity documents.
+3. Consider mediation before legal action.
+4. Prepare for custody or maintenance discussions.
 
-1. Immediately change passwords.
-2. File a complaint at cybercrime.gov.in.
-3. Report to your nearest cyber police station.
-4. Consult a Cyber Crime Lawyer."""
+👉 Consult a Family Lawyer for proper guidance."""
 
-    elif "consumer" in q or "product" in q:
-        return """You can take these steps:
+    # 🟡 Property Law
+    elif any(word in q for word in ["property", "land", "ownership", "house"]):
+        return """🏠 Property Law Guidance:
 
-1. Contact the seller for resolution.
-2. File complaint on consumerhelpline.gov.in.
-3. Approach consumer court if necessary.
-4. Consult a Consumer Lawyer."""
+1. Verify ownership and legal documents.
+2. Send a legal notice if dispute exists.
+3. File a civil suit if required.
+4. Avoid illegal possession conflicts.
 
-    elif "crime" in q or "police" in q: 
-        return """Here are some steps you can take: 
-1. Report the crime to the police immediately.
-2. Gather any evidence related to the crime.    
-3. File a First Information Report (FIR) at the police station.
-4. Consult a Criminal Lawyer for legal guidance."""
+👉 Consult a Property Lawyer to resolve the issue."""
 
-    elif "contract" in q or "agreement" in q:
-        return """Steps you can take:
-1. Review the contract terms carefully.
-2. Attempt to resolve the issue through communication.
-3. Consider mediation or arbitration if included in the contract.
-4. Consult a Corporate Lawyer for advice."""
+    # 🔵 Civil Law
+    elif any(word in q for word in ["dispute", "agreement", "money", "contract"]):
+        return """📄 Civil Law Guidance:
 
+1. Review agreements or documents carefully.
+2. Attempt negotiation or mediation first.
+3. Collect proof of transactions or agreements.
+4. Proceed legally if dispute continues.
+
+👉 Consult a Civil Lawyer for resolution."""
+
+    # 🟣 Corporate Law
+    elif any(word in q for word in ["company", "business", "corporate", "startup"]):
+        return """🏢 Corporate Law Guidance:
+
+1. Review contracts and company policies.
+2. Ensure legal compliance of business operations.
+3. Avoid signing unclear agreements.
+4. Maintain proper documentation.
+
+👉 Consult a Corporate Lawyer for business legal advice."""
+
+    # 💻 Cyber Law
+    elif any(word in q for word in ["hack", "cyber", "online fraud", "scam", "account"]):
+        return """💻 Cyber Law Guidance:
+
+1. Secure all accounts immediately.
+2. Change passwords and enable 2FA.
+3. Report at cybercrime.gov.in.
+4. Keep screenshots and evidence.
+
+👉 Consult a Cyber Law expert for legal action."""
+
+    # 🧑‍🏭 Labor Law
+    elif any(word in q for word in ["labor", "wages", "worker", "salary", "union"]):
+        return """👷 Labor Law Guidance:
+
+1. Check employment rights and policies.
+2. Raise complaint with employer or authority.
+3. Gather salary or work-related proof.
+4. Approach labor court if needed.
+
+👉 Consult a Labor Lawyer for assistance."""
+
+    # 👔 Employee Law
+    elif any(word in q for word in ["job", "salary", "termination", "harassment", "employee"]):
+        return """👔 Employee Law Guidance:
+
+1. Review your employment contract.
+2. Document incidents (emails, messages).
+3. Report workplace issues formally.
+4. Take legal action if rights are violated.
+
+👉 Consult an Employee Rights Lawyer."""
+
+    # 🌱 Environmental Law
+    elif any(word in q for word in ['pollution', 'environment', 'illegal construction','factory', 'waste']):
+        return """🌱 Environmental Law Guidance:
+
+1. Report violations to local authorities.
+2. Collect evidence (photos, videos).
+3. File complaint with pollution control board.
+4. Follow legal environmental procedures.
+
+👉 Consult an Environmental Lawyer."""
+
+    # 💡 Intellectual Property Law
+    elif any(word in q for word in ["copyright", "trademark", "patent", "idea", "logo"]):
+        return """💡 Intellectual Property Guidance:
+
+1. Register your work legally (copyright/trademark).
+2. Avoid sharing ideas publicly without protection.
+3. Keep proof of creation.
+4. Take action against misuse.
+
+👉 Consult an IP Lawyer to protect your rights."""
+
+    # ⚪ Default fallback
     else:
-        return """Here are some general steps:
+        return """📌 General Legal Guidance:
 
-1. Gather relevant documents.
-2. Understand the legal issue clearly.
-3. Consult the appropriate lawyer.
-4. Consider filing a complaint in the appropriate authority."""
+1. Identify your legal issue clearly.
+2. Gather all related documents.
+3. Avoid taking action without legal advice.
+4. Approach the correct legal authority.
 
+👉 I recommend consulting a lawyer for proper assistance."""
 
 # ---------------- GEMINI AI CHATBOT ----------------
 
@@ -321,51 +388,44 @@ def consultation_chat(request, consultation_id):
         "consultation": consultation
     })
 
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Lawyer, LawCategory
+
 def lawyer_register(request):
 
     categories = LawCategory.objects.all()
 
     if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        location = request.POST.get('location')
+        experience = request.POST.get('experience')
 
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        location = request.POST.get("location")
-        experience = request.POST.get("experience")
-        specialization = request.POST.get("specialization")
+        category_id = request.POST.get('category')
+        category = LawCategory.objects.get(id=category_id)
 
-        # CHECK IF USERNAME EXISTS
-        if User.objects.filter(username=username).exists():
+        # ✅ create user
+        user = User.objects.create_user(username=username, password=password, email=email)
 
-            messages.error(request, "Username already exists. Try another one.")
-
-            return redirect("lawyer_register")
-
-        # CREATE USER
-        user = User.objects.create_user(
-            username=username,
-            password=password
-        )
-
-        category = LawCategory.objects.get(id=specialization)
-
+        # ✅ create lawyer
         Lawyer.objects.create(
-            user=user,
+            user=user,   # ONLY if you added user field
             name=name,
             email=email,
             phone=phone,
-            location=location,
+            category=category,
+            specialization=category.name,
             experience=experience,
-            specialization=category
+            location=location
         )
 
-        return redirect("lawyer_login")
-
-    return render(request, "lawyer_register.html", {
-        "categories": categories
-    })
+        messages.success(request, "Registration successful!")
+    
+    return render(request, "lawyer_register.html", {"categories": categories})
 
 def lawyer_login(request):
 
@@ -411,46 +471,14 @@ def lawyer_profile(request, lawyer_id):
 
 
 @login_required
-def start_chat(request, consultation_id):
-
-    consultation = Consultation.objects.get(id=consultation_id)
-
-    chat = ChatSession.objects.create(
-        lawyer=consultation.lawyer,
-        user=request.user   # use logged-in user instead
-    )
-
-    return redirect(f"/chat/{chat.id}/")
 
 
 def request_success(request):
     return render(request,"success.html")
-
     return redirect("/request-success/")   
 
 
-def chat_page(request, chat_id):
-
-    chat = ChatSession.objects.get(id=chat_id)
-
-    messages = Message.objects.filter(chat=chat)
-
-    if request.method == "POST":
-
-        text = request.POST.get("text")
-
-        Message.objects.create(
-            chat=chat,
-            sender=request.user,
-            text=text
-        )
-
-        return redirect(f"/chat/{chat.id}/")
-
-    return render(request,"chat.html",{
-        "chat":chat,
-        "messages":messages
-    })
+from .models import Message, ChatSession
 
 def user_chats(request):
 
@@ -458,4 +486,146 @@ def user_chats(request):
 
     return render(request,"user_chats.html",{
         "chats":chats
+    })
+
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from main.models import Lawyer
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+
+            # 🔥 SET LAWYER ONLINE
+            try:
+                lawyer = Lawyer.objects.get(email=user.email)
+                lawyer.is_online = True
+                lawyer.save()
+            except Lawyer.DoesNotExist:
+                pass
+
+            return redirect("dashboard")
+
+        else:
+            return render(request, "login.html", {"error": "Invalid credentials"})
+
+    return render(request, "login.html")
+
+def add_review(request, lawyer_id):
+    lawyer = Lawyer.objects.get(id=lawyer_id)
+
+    rating = int(request.POST.get("rating"))
+    comment = request.POST.get("comment")
+
+    Review.objects.create(
+        lawyer=lawyer,
+        user=request.user,
+        rating=rating,
+        comment=comment
+    )
+
+    # 🔥 Update rating
+    reviews = Review.objects.filter(lawyer=lawyer)
+    total = sum([r.rating for r in reviews])
+    lawyer.total_reviews = reviews.count()
+    lawyer.rating = total / lawyer.total_reviews
+    lawyer.save()
+
+    return redirect('lawyer_profile', id=lawyer.id)
+
+def send_message(request, chat_id):
+    chat = ChatSession.objects.get(id=chat_id)
+
+    text = request.POST.get("text")
+    file = request.FILES.get("file")
+
+    Message.objects.create(
+        chat=chat,
+        sender=request.user,
+        text=text,
+        file=file
+    )
+
+    return redirect('chat_page', chat_id=chat.id)
+
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from .models import ChatSession
+
+def start_chat(request, lawyer_id):
+    from .models import ChatSession, Lawyer
+
+    lawyer = Lawyer.objects.get(id=lawyer_id)
+
+    chat = ChatSession.objects.create(
+        user=request.user,
+        lawyer=lawyer
+    )
+
+    return redirect('chat_page', chat.id)
+
+from .models import Booking
+
+def book_lawyer(request, lawyer_id):
+    lawyer = Lawyer.objects.get(id=lawyer_id)
+
+    booking = Booking.objects.create(
+        user=request.user,
+        lawyer=lawyer,
+        amount=lawyer.consultation_fee
+    )
+
+    return redirect(f"/payment/{booking.id}/")
+
+def payment_page(request, booking_id):
+    booking = Booking.objects.get(id=booking_id)
+
+    if request.method == "POST":
+        booking.is_paid = True
+        booking.save()
+        return redirect("/success/")
+
+    return render(request, "payment.html", {"booking": booking})
+
+from .models import Booking
+
+def pay_lawyer(request, lawyer_id):
+    lawyer = Lawyer.objects.get(id=lawyer_id)
+
+    Booking.objects.create(
+        user=request.user,
+        lawyer=lawyer,
+        amount=lawyer.consultation_fee,
+        is_paid=True
+    )
+
+    return redirect('dashboard')
+
+def chat_page(request, chat_id):
+    from .models import Chat, Message
+
+    chat = Chat.objects.get(id=chat_id)
+    messages = Message.objects.filter(chat=chat)
+
+    if request.method == "POST":
+        text = request.POST.get("text")
+        file = request.FILES.get("file")
+
+        if text or file:
+            Message.objects.create(
+                chat=chat,
+                sender=request.user,
+                text=text,
+                file=file
+            )
+
+    return render(request, "chat.html", {
+        "chat": chat,
+        "messages": messages
     })

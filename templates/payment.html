@@ -1,0 +1,6 @@
+<h2>Pay ₹{{ booking.amount }}</h2>
+
+<form method="POST">
+{% csrf_token %}
+<button type="submit">Pay Now</button>
+</form>

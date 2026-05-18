@@ -164,6 +164,21 @@ background:#c0392b;
 {% elif law.name|lower == "corporate law" %}
 🏢
 
+{% elif law.name|lower == "civil law" %}
+⚖
+
+{% elif law.name|lower == "labor law" %}
+👷
+
+{% elif law.name|lower == "environmental law" %}
+🌿
+
+{% elif law.name|lower == "intellectual property law" %}
+📝
+    
+{% elif law.name|lower == "employee law" %} 
+👔
+
 {% else %}
 ⚖
 {% endif %}
@@ -195,6 +210,30 @@ background:#c0392b;
 {% elif law.name|lower == "corporate law" %}
 
 <p>Business compliance & contracts</p>
+
+{% elif law.name|lower == "civil law" %}
+
+<p>disputes between individuals or organizations</p>
+
+{%elif law.name|lower == "labor law" %}
+
+<p>covers group labour rights, union, collective bargaining</p> 
+
+{% elif law.name|lower == "environmental law" %}
+
+<p>regulations on pollution and conservation</p>
+
+{%elif law.name|lower == "intellectual property law" %}
+
+<p>protection of inventions, trademarks, and copyrights</p>
+
+{% elif law.name|lower == "employee law" %}
+
+<p>protects individual workplace rights ,contracts and disputes</p>
+
+{% else %}
+<p>Legal issues and disputes</p>
+
 
 {% endif %}
 

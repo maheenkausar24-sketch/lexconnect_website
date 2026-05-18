@@ -1,68 +1,121 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-<title>Chat</title>
-
 <style>
 
-body{
-font-family:Arial;
-background:linear-gradient(135deg,#5b6df0,#8e66f5);
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-.chat-container{
-width:500px;
-background:white;
-border-radius:15px;
-overflow:hidden;
+/* MAIN BOX */
+.chat-container {
+    width: 420px;
+    height: 650px;
+    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.2);
+    border-radius: 25px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.3);
 }
 
-.chat-header{
-background:#5b6df0;
-color:white;
-padding:15px;
-font-size:18px;
+/* HEADER */
+.chat-header {
+    background: rgba(0,0,0,0.2);
+    color: white;
+    padding: 18px;
+    font-size: 18px;
+    font-weight: bold;
 }
 
-.chat-box{
-height:400px;
-overflow-y:auto;
-padding:20px;
-background:#f4f6fb;
+/* CHAT AREA */
+.chat-box {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-.chat-input{
-display:flex;
-padding:10px;
-border-top:1px solid #ddd;
+/* MESSAGES */
+.message {
+    padding: 10px 15px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    max-width: 70%;
+    font-size: 14px;
+    animation: fadeIn 0.3s ease;
 }
 
-.chat-input input{
-flex:1;
-padding:10px;
-border-radius:20px;
-border:1px solid #ccc;
+.user {
+    background: #0084ff;
+    color: white;
+    margin-left: auto;
 }
 
-.chat-input button{
-margin-left:10px;
-background:#5b6df0;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:20px;
+.lawyer {
+    background: white;
+    color: black;
+}
+
+/* INPUT BAR */
+.chat-input {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 8px;
+    background: rgba(255,255,255,0.3);
+}
+
+/* INPUT */
+.chat-input input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+}
+
+/* ICON BUTTONS */
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* BUTTON COLORS */
+.mic-btn {
+    background: #ff4d4d;
+    color: white;
+}
+
+.file-btn {
+    background: #ddd;
+}
+
+.send-btn {
+    background: #0084ff;
+    color: white;
+}
+
+/* HOVER */
+.icon-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from {opacity:0; transform: translateY(5px);}
+    to {opacity:1;}
 }
 
 </style>
-
-</head>
-
-<body>
 
 <div class="chat-container">
 
@@ -70,126 +123,35 @@ border-radius:20px;
 Chat with {{ chat.lawyer.name }}
 </div>
 
-<style>
-
-body{
-font-family:Arial;
-background:linear-gradient(135deg,#5b6df0,#8e66f5);
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.chat-container{
-width:520px;
-background:white;
-border-radius:15px;
-overflow:hidden;
-box-shadow:0 10px 30px rgba(0,0,0,0.2);
-display:flex;
-flex-direction:column;
-}
-
-.chat-header{
-background:#5b6df0;
-color:white;
-padding:15px;
-font-size:18px;
-font-weight:bold;
-}
-
-.chat-box{
-height:420px;
-overflow-y:auto;
-padding:20px;
-background:#f4f6fb;
-display:flex;
-flex-direction:column;
-}
-
-.message{
-max-width:70%;
-padding:10px 15px;
-margin-bottom:10px;
-border-radius:12px;
-font-size:14px;
-}
-
-.user-message{
-background:#5b6df0;
-color:white;
-align-self:flex-end;
-}
-
-.lawyer-message{
-background:#e4e6eb;
-color:black;
-align-self:flex-start;
-}
-
-.time{
-font-size:10px;
-opacity:0.7;
-margin-top:5px;
-}
-
-.chat-input{
-display:flex;
-padding:12px;
-border-top:1px solid #ddd;
-}
-
-.chat-input input{
-flex:1;
-padding:10px;
-border-radius:20px;
-border:1px solid #ccc;
-}
-
-.chat-input button{
-margin-left:10px;
-background:#5b6df0;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:20px;
-cursor:pointer;
-}
-
-</style>
-
 <div class="chat-box" id="chat-box">
 
-{% for message in messages %}
+{% for msg in messages %}
+<div class="message {% if msg.sender == request.user %}user{% else %}lawyer{% endif %}">
+    {{ msg.text }}
 
-{% if message.sender == request.user %}
-
-<div class="message user-message">
-{{ message.text }}
-<div class="time">{{ message.created_at|time:"H:i" }}</div>
+    {% if msg.file %}
+        <br>
+        📎 <a href="{{ msg.file.url }}">File</a>
+    {% endif %}
 </div>
-
-{% else %}
-
-<div class="message lawyer-message">
-{{ message.text }}
-<div class="time">{{ message.created_at|time:"H:i" }}</div>
-</div>
-
-{% endif %}
-
 {% endfor %}
 
 </div>
 
-<form method="POST" class="chat-input">
-
+<form method="POST" enctype="multipart/form-data" class="chat-input">
 {% csrf_token %}
 
-<input type="text" name="text" placeholder="Type your message..." required>
+<button type="button" class="icon-btn mic-btn" onclick="startVoice()">🎤</button>
 
-<button type="submit">Send</button>
+<input type="text" name="text" id="messageInput" placeholder="Type a message...">
+<input type="hidden" name="dummy">
+
+<label class="icon-btn file-btn">
+    📎
+    <input type="file" name="file">
+</label>
+
+<button type="submit" class="icon-btn send-btn">➤</button>
 
 </form>
 
@@ -197,11 +159,23 @@ cursor:pointer;
 
 <script>
 
-var chatBox = document.getElementById("chat-box");
+function startVoice() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 
-chatBox.scrollTop = chatBox.scrollHeight;
+    recognition.lang = "en-IN";  // Indian English
+    recognition.start();
+
+    recognition.onresult = function(event) {
+        document.getElementById("messageInput").value =
+            event.results[0][0].transcript;
+    };
+
+    recognition.onerror = function() {
+        alert("Voice recognition not supported in this browser");
+    };
+}
+
+let box = document.getElementById("chat-box");
+box.scrollTop = box.scrollHeight;
 
 </script>
-
-</body>
-</html>

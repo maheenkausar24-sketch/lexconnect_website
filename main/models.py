@@ -11,62 +11,37 @@ class LawCategory(models.Model):
 
 
 class Lawyer(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
 
-    # 🔥 CONNECT CATEGORY
-    category = models.ForeignKey('LawCategory', on_delete=models.CASCADE)
+    category = models.ForeignKey(LawCategory, on_delete=models.CASCADE)
 
     specialization = models.CharField(max_length=100)
     experience = models.IntegerField()
     location = models.CharField(max_length=100)
 
-    def __str__(self):
-        return self.name
+    certification = models.CharField(max_length=200)
+    certificate_file = models.FileField(upload_to='certificates/')
 
+    is_verified = models.BooleanField(default=False)
 
+    rating = models.FloatField(default=0)
+    total_reviews = models.IntegerField(default=0)
 
-class Message(models.Model):
+    consultation_fee = models.IntegerField(default=500)
 
-    chat = models.ForeignKey("ChatSession", on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    text = models.TextField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
-from django.db import models
-
-
-# ✅ Lawyer Model (FIRST)
-class Lawyer(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=15)
-    specialization = models.CharField(max_length=100)
-    experience = models.IntegerField()
-    location = models.CharField(max_length=100)
+    is_online = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
 
 
-# ✅ Chat Session
-class ChatSession(models.Model):
-    user_name = models.CharField(max_length=100)
-    lawyer = models.ForeignKey('main.Lawyer', on_delete=models.CASCADE, null=True, blank=True)
-    started_at = models.DateTimeField(auto_now_add=True)
-    comment = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.user_name
-
-
-# ✅ Consultation
+# ✅ CONSULTATION MODEL (IMPORTANT)
 class Consultation(models.Model):
-    lawyer = models.ForeignKey('main.Lawyer', on_delete=models.CASCADE)
+    lawyer = models.ForeignKey(Lawyer, on_delete=models.CASCADE)
     client_name = models.CharField(max_length=100)
     issue = models.TextField()
 
@@ -74,11 +49,51 @@ class Consultation(models.Model):
         return self.client_name
 
 
-# ✅ Review
-class Review(models.Model):
-    lawyer = models.ForeignKey('main.Lawyer', on_delete=models.CASCADE)
-    rating = models.IntegerField()
-    comment = models.TextField(blank=True, null=True)
+# ✅ CHAT SESSION
+class ChatSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lawyer = models.ForeignKey(Lawyer, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.rating)
+        return f"{self.user.username} - {self.lawyer.name}"
+
+
+# ✅ MESSAGE
+
+class Message(models.Model):
+    chat = models.ForeignKey('Chat', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to="chat_files/", blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+# ✅ REVIEW
+class Review(models.Model):
+    lawyer = models.ForeignKey(Lawyer, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    rating = models.IntegerField()
+    comment = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# ✅ BOOKING / PAYMENT
+class Booking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lawyer = models.ForeignKey(Lawyer, on_delete=models.CASCADE)
+
+    amount = models.IntegerField()
+    is_paid = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Chat(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_chats")
+    lawyer = models.ForeignKey('Lawyer', on_delete=models.CASCADE, related_name="lawyer_chats")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.lawyer}"
